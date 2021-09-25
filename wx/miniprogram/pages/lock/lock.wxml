@@ -1,0 +1,16 @@
+<view class="container">
+    <view class="static">
+        <image class="sedan" src="/resources/car.png"></image>
+        <view class="margin-top">
+            <view>架势安全是用户的责任</view>
+            <view>请将车辆停放在停车位内</view>
+        </view>
+    </view>
+    <view class="avatar-container">
+        <button class="cu-avatar round lg bg-grey margin-xs" open-type="getUserInfo" bindgetuserinfo="onGetUserInfo">
+            <text class="cuIcon-people"></text>
+        </button>
+        <view class="margin-top">实时展示我的头像</view>
+    </view>
+    <button style="width:80%" class="bg-grey lg">立即开锁</button>
+</view>
