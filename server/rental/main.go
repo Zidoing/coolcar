@@ -3,6 +3,7 @@ package main
 import (
 	rentalpb "coolcar/rental/api/gen/v1"
 	"coolcar/rental/trip"
+	"coolcar/shared/auth"
 	"fmt"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -20,7 +21,11 @@ func main() {
 		logger.Fatal("cannot listen", zap.Error(err))
 	}
 
-	server := grpc.NewServer()
+	interceptor, err := auth.Interceptor("shared/auth/token/public.key")
+	if err != nil {
+		panic(err)
+	}
+	server := grpc.NewServer(grpc.UnaryInterceptor(interceptor))
 
 	if err != nil {
 		panic(err)
