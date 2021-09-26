@@ -5,12 +5,17 @@ import (
 	authpb "coolcar/auth/api/gen/v1"
 	"coolcar/auth/auth"
 	"coolcar/auth/dao"
+	"coolcar/auth/token"
+	"github.com/dgrijalva/jwt-go"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"io"
 	"log"
 	"net"
+	"os"
+	"time"
 )
 
 func main() {
@@ -29,9 +34,28 @@ func main() {
 	}
 
 	server := grpc.NewServer()
+
+	pkFile, err := os.Open("auth/private.key")
+	if err != nil {
+		panic(err)
+	}
+
+	pkBytes, err := io.ReadAll(pkFile)
+
+	if err != nil {
+		panic(err)
+	}
+	key, err := jwt.ParseRSAPrivateKeyFromPEM(pkBytes)
+
+	if err != nil {
+		panic(err)
+	}
+
 	authpb.RegisterAuthServiceServer(server, &auth.Service{
-		Logger: logger,
-		Mongo:  dao.NewMongo(mc.Database("coolcar")),
+		Logger:         logger,
+		Mongo:          dao.NewMongo(mc.Database("coolcar")),
+		TokenExpire:    time.Minute * 100,
+		TokenGenerator: token.NewJWTTokenGen("coolcar/auth", key),
 	})
 
 	err = server.Serve(listen)
