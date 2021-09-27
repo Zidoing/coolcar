@@ -6,6 +6,7 @@ import (
 	"coolcar/auth/auth"
 	"coolcar/auth/dao"
 	"coolcar/auth/token"
+	"coolcar/shared/server"
 	"github.com/dgrijalva/jwt-go"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -13,27 +14,21 @@ import (
 	"google.golang.org/grpc"
 	"io"
 	"log"
-	"net"
 	"os"
 	"time"
 )
 
 func main() {
-	logger, err := newZapLogger()
+	logger, err := server.NewZapLogger()
 	if err != nil {
 		log.Fatalf("cannot create logger:%v", err)
 	}
-	listen, err := net.Listen("tcp", ":8081")
-	if err != nil {
-		logger.Fatal("cannot listen", zap.Error(err))
-	}
+
 	ctx := context.Background()
 	mc, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://192.168.50.5:27017/?readPreference=primary&appname=mongodb-vscode%200.6.10&ssl=false"))
 	if err != nil {
 		logger.Fatal("cannot connect mongodb", zap.Error(err))
 	}
-
-	server := grpc.NewServer()
 
 	pkFile, err := os.Open("auth/private.key")
 	if err != nil {
@@ -51,20 +46,18 @@ func main() {
 		panic(err)
 	}
 
-	authpb.RegisterAuthServiceServer(server, &auth.Service{
-		Logger:         logger,
-		Mongo:          dao.NewMongo(mc.Database("coolcar")),
-		TokenExpire:    time.Minute * 100,
-		TokenGenerator: token.NewJWTTokenGen("coolcar/auth", key),
+	server.RunGRPCServer(&server.GRPCConfig{
+		Name:   "auth",
+		Addr:   ":8081",
+		Logger: logger,
+		RegisterFunc: func(server *grpc.Server) {
+			authpb.RegisterAuthServiceServer(server, &auth.Service{
+				Logger:         logger,
+				Mongo:          dao.NewMongo(mc.Database("coolcar")),
+				TokenExpire:    time.Minute * 100,
+				TokenGenerator: token.NewJWTTokenGen("coolcar/auth", key),
+			})
+		},
 	})
 
-	err = server.Serve(listen)
-
-	logger.Fatal("cannot server", zap.Error(err))
-}
-
-func newZapLogger() (*zap.Logger, error) {
-	cfg := zap.NewDevelopmentConfig()
-	cfg.EncoderConfig.TimeKey = ""
-	return cfg.Build()
 }

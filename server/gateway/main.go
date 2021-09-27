@@ -23,20 +23,20 @@ func main() {
 		},
 	))
 
-	err := authpb.RegisterAuthServiceHandlerFromEndpoint(
-		c, mux, "localhost:8081", []grpc.DialOption{grpc.WithInsecure()},
-	)
-
-	if err != nil {
-		log.Fatalf("cannot register auth service :%v", err)
+	serverConfig := []struct {
+		name         string
+		addr         string
+		registerFunc func(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error)
+	}{
+		{name: "auth", addr: "localhost:8081", registerFunc: authpb.RegisterAuthServiceHandlerFromEndpoint},
+		{name: "rental", addr: "localhost:8081", registerFunc: rentalpb.RegisterTripServiceHandlerFromEndpoint},
 	}
 
-	err = rentalpb.RegisterTripServiceHandlerFromEndpoint(
-		c, mux, "localhost:8082", []grpc.DialOption{grpc.WithInsecure()},
-	)
-
-	if err != nil {
-		log.Fatalf("cannot register auth service :%v", err)
+	for _, s := range serverConfig {
+		err := s.registerFunc(c, mux, s.addr, []grpc.DialOption{grpc.WithInsecure()})
+		if err != nil {
+			log.Fatalf("cannot register %s service :%v", s.name, err)
+		}
 	}
 
 	log.Fatal(http.ListenAndServe(":8080", mux))
