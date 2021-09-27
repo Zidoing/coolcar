@@ -29,7 +29,7 @@ func main() {
 		registerFunc func(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error)
 	}{
 		{name: "auth", addr: "localhost:8081", registerFunc: authpb.RegisterAuthServiceHandlerFromEndpoint},
-		{name: "rental", addr: "localhost:8081", registerFunc: rentalpb.RegisterTripServiceHandlerFromEndpoint},
+		{name: "rental", addr: "localhost:8082", registerFunc: rentalpb.RegisterTripServiceHandlerFromEndpoint},
 	}
 
 	for _, s := range serverConfig {

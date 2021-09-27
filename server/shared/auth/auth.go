@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"coolcar/shared/auth/token"
+	"coolcar/shared/id"
 	"github.com/dgrijalva/jwt-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -49,7 +50,7 @@ func (i *interceptor) HandleReq(ctx context.Context, req interface{}, info *grpc
 	if err != nil {
 		panic(err)
 	}
-	return handler(ContextWithAccountID(ctx, aid), req)
+	return handler(ContextWithAccountID(ctx, id.AccountID(aid)), req)
 
 }
 
@@ -73,13 +74,13 @@ func tokenFromContext(c context.Context) (string, error) {
 type accountIDKey struct {
 }
 
-func ContextWithAccountID(c context.Context, aid string) context.Context {
+func ContextWithAccountID(c context.Context, aid id.AccountID) context.Context {
 	return context.WithValue(c, accountIDKey{}, aid)
 }
 
-func AccountIDFromContext(c context.Context) (string, error) {
+func AccountIDFromContext(c context.Context) (id.AccountID, error) {
 	v := c.Value(accountIDKey{})
-	aid, ok := v.(string)
+	aid, ok := v.(id.AccountID)
 	if !ok {
 		return "", nil
 	}

@@ -5,3 +5,5 @@ http:
     - selector: rental.v1.TripService.CreateTrip
       post: /v1/trip
       body: "*"
+    - selector: rental.v1.TripService.GetTrip
+      get: /v1/trip/{id}
