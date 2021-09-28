@@ -4,6 +4,7 @@ import (
 	"context"
 	authpb "coolcar/auth/api/gen/v1"
 	rentalpb "coolcar/rental/api/gen/v1"
+	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -38,6 +39,8 @@ func main() {
 			log.Fatalf("cannot register %s service :%v", s.name, err)
 		}
 	}
+
+	fmt.Println("listen :8080")
 
 	log.Fatal(http.ListenAndServe(":8080", mux))
 
